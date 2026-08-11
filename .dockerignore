@@ -1,0 +1,16 @@
+.git
+.gitignore
+.claude
+node_modules
+*.log
+
+# Docs and the sync backend are not part of the served app.
+README.md
+SPEC.md
+worker.js
+wrangler.toml
+
+Dockerfile
+.dockerignore
+docker-compose.yml
+Caddyfile

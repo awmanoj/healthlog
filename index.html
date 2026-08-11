@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HealthLog">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230f766e'/%3E%3Cpath d='M90 138s-42-25-42-56a24 24 0 0 1 42-16 24 24 0 0 1 42 16c0 31-42 56-42 56z' fill='%23fff'/%3E%3C/svg%3E">
+<title>HealthLog</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --fg:#16181d; --muted:#6b7280; --line:#e4e7ec;
+  --accent:#0f766e; --accent-fg:#fff;
+  --ok:#0f766e; --warn:#b45309; --warn-bg:#fef3c7; --alert:#b91c1c; --alert-bg:#fee2e2;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d0f12; --card:#16191e; --fg:#e8eaed; --muted:#9aa1ab; --line:#262b32;
+    --accent:#2dd4bf; --accent-fg:#06231f;
+    --ok:#2dd4bf; --warn:#fbbf24; --warn-bg:#3b2f0c; --alert:#f87171; --alert-bg:#3f1414;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%; overscroll-behavior-y:contain;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+.app{max-width:640px;margin:0 auto;padding:0 14px calc(84px + var(--safe-b))}
+
+/* header */
+header{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:10px 0 8px;border-bottom:1px solid var(--line);
+  margin-bottom:14px;
+}
+.hrow{display:flex;align-items:center;gap:10px}
+.patientbtn{
+  display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:7px 13px;font-weight:600;box-shadow:var(--shadow);min-width:0;
+}
+.patientbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.patientbtn .chev{color:var(--muted);font-size:11px;flex:none}
+.syncbtn{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px;
+  border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:var(--card);flex:none}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--ok)} .dot.off{background:var(--warn)} .dot.err{background:var(--alert)}
+.spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.card>h3{padding:13px 15px 11px;display:flex;align-items:center;gap:9px;font-size:15.5px}
+.count{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--muted);
+  background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.count.done{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.slot{display:flex;align-items:center;gap:12px;padding:11px 15px;border-top:1px solid var(--line);min-height:56px;width:100%;text-align:left}
+.slot .lbl{flex:1;min-width:0}
+.slot .lbl b{display:block;font-weight:550;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot .lbl small{color:var(--muted);font-size:12.5px}
+.val{font-variant-numeric:tabular-nums;font-weight:680;font-size:19px;letter-spacing:-.02em;white-space:nowrap}
+.val u{font-size:11.5px;font-weight:600;text-decoration:none;color:var(--muted);margin-left:3px}
+.val.warn{color:var(--warn)} .val.alert{color:var(--alert)}
+.tick{width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--line);color:var(--muted);
+  display:grid;place-items:center;font-size:19px;line-height:1;flex:none}
+.pill{font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;background:var(--bg);border:1px solid var(--line);color:var(--muted);vertical-align:2px;margin-left:6px}
+.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.pill.alert{background:var(--alert-bg);color:var(--alert);border-color:transparent}
+.addextra{padding:10px 15px;border-top:1px solid var(--line);color:var(--accent);font-weight:600;font-size:13.5px;width:100%;text-align:left}
+
+/* generic */
+.muted{color:var(--muted)}
+.tiny{font-size:12.5px}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14.5px}
+.sectitle{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 4px 8px}
+.btn{background:var(--accent);color:var(--accent-fg);border-radius:11px;padding:13px 16px;font-weight:650;text-align:center;width:100%;display:block}
+.btn.sec{background:var(--card);color:var(--fg);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--alert);border:1px solid color-mix(in srgb,var(--alert) 40%,transparent)}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:9px} .row>*{flex:1}
+label.f{display:block;margin-bottom:13px}
+label.f>span{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],select,textarea{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);
+  -webkit-appearance:none;appearance:none}
+input[type=number]{font-variant-numeric:tabular-nums;font-size:22px;font-weight:650;text-align:center}
+textarea{min-height:64px;resize:vertical;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:550}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.listitem{display:flex;align-items:center;gap:12px;padding:12px 15px;border-top:1px solid var(--line);width:100%;text-align:left}
+.card>.listitem:first-child,.card>h3+.listitem{border-top:none}
+
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+  background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
+nav button{flex:1;padding:9px 4px 8px;color:var(--muted);font-size:10.5px;font-weight:600;display:grid;gap:2px;justify-items:center}
+nav button b{font-size:20px;line-height:1.1;font-weight:400}
+nav button[aria-current=page]{color:var(--accent)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--card);
+  border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;transform:translateY(100%);
+  transition:transform .24s cubic-bezier(.32,.72,0,1);padding-bottom:calc(16px + var(--safe-b));
+  max-width:640px;margin:0 auto;-webkit-overflow-scrolling:touch}
+.sheet.open{transform:none}
+.sheet .inner{padding:6px 16px 0}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:9px auto 4px}
+.sheethead{display:flex;align-items:center;gap:10px;padding:6px 0 14px}
+.sheethead h2{font-size:18px;flex:1}
+.x{width:32px;height:32px;border-radius:50%;background:var(--bg);color:var(--muted);font-size:18px;flex:none}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow)}
+.stat .k{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.stat .v{font-size:29px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .v small{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+.stat .sub{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.trend{font-weight:700}.trend.up{color:var(--warn)}.trend.down{color:var(--ok)}
+.bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;background:var(--ok);border-radius:3px}
+.alertbox{background:var(--alert-bg);border:1px solid color-mix(in srgb,var(--alert) 30%,transparent);
+  color:var(--alert);border-radius:12px;padding:12px 14px;font-size:13.5px;margin-bottom:12px;font-weight:550}
+.note{font-size:12px;color:var(--muted);padding:10px 4px;line-height:1.5}
+
+/* report (print) */
+#report{display:none}
+@media print{
+  body{background:#fff;color:#000;font-size:11pt}
+  header,nav,.scrim,.sheet,#view{display:none!important}
+  .app{padding:0;max-width:none}
+  #report{display:block}
+  #report h1{font-size:17pt;margin-bottom:2pt}
+  #report h2{font-size:12pt;margin:16pt 0 5pt;page-break-after:avoid}
+  #report table{width:100%;border-collapse:collapse;font-size:9.5pt;page-break-inside:auto}
+  #report th,#report td{border:1px solid #999;padding:3pt 5pt;text-align:left}
+  #report th{background:#eee}
+  #report tr{page-break-inside:avoid}
+  #report .rmeta{font-size:9.5pt;color:#444}
+  #report .w{font-weight:700}#report .a{font-weight:700;text-decoration:underline}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="hrow">
+      <button class="patientbtn" id="patientBtn"><span id="patientName">—</span><span class="chev">▼</span></button>
+      <button class="syncbtn" id="syncBtn"><span class="dot" id="syncDot"></span><span id="syncTxt">Local</span></button>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav>
+  <button data-tab="today"   aria-current="page"><b>◉</b>Today</button>
+  <button data-tab="history"><b>☰</b>History</button>
+  <button data-tab="stats"><b>▤</b>Stats</button>
+  <button data-tab="settings"><b>⚙</b>Settings</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div class="inner" id="sheetInner"></div></div>
+<div id="report"></div>
+
+<script>
+// ==== CORE START ====
+// Pure logic — no DOM, no browser APIs beyond crypto.randomUUID.
+// test/merge.test.mjs extracts this block verbatim and runs it in Node.
+
+function uid(){
+  if (typeof crypto!=='undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16);
+  });
+}
+
+/* ---------- merge: union by id, last-write-wins, total order ---------- */
+
+// Strict total order so merge is commutative: without the deviceId tiebreak,
+// two records with the same updatedAt would resolve differently depending on
+// argument order, and sync would flap between devices forever.
+function newer(a,b){
+  if (a.updatedAt !== b.updatedAt) return a.updatedAt > b.updatedAt;
+  return String(a.deviceId||'') > String(b.deviceId||'');
+}
+
+function mergeById(a,b){
+  const out=new Map();
+  for (const r of a||[]) { const p=out.get(r.id); if(!p||newer(r,p)) out.set(r.id,r); }
+  for (const r of b||[]) { const p=out.get(r.id); if(!p||newer(r,p)) out.set(r.id,r); }
+  return Array.from(out.values());
+}
+
+function mergeStore(local,remote){
+  return {
+    patients: mergeById(local&&local.patients, remote&&remote.patients),
+    readings: mergeById(local&&local.readings, remote&&remote.readings),
+  };
+}
+
+const live = arr => (arr||[]).filter(r=>!r.deleted);
+
+/* ---------- time ---------- */
+
+// ISO 8601 *with local offset* — the local calendar day survives a round-trip
+// even if the device timezone later changes.
+function toLocalIso(d){
+  const off=-d.getTimezoneOffset(), s=off<0?'-':'+', A=Math.abs(off);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+
+         p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+
+         s+p(Math.floor(A/60))+':'+p(A%60);
+}
+const dayKey  = iso => String(iso).slice(0,10);      // local date, offset already baked in
+const hhmm    = iso => String(iso).slice(11,16);
+const todayKey= (now=new Date()) => toLocalIso(now).slice(0,10);
+
+function daysAgoKey(n,now=new Date()){
+  const d=new Date(now); d.setDate(d.getDate()-n); return toLocalIso(d).slice(0,10);
+}
+function prettyDay(key,now=new Date()){
+  if (key===todayKey(now)) return 'Today';
+  if (key===daysAgoKey(1,now)) return 'Yesterday';
+  const [y,m,d]=key.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  return dt.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+}
+
+/* ---------- metric definitions (data, not code) ---------- */
+
+// Starting points only. Every number here is editable per patient in Settings,
+// and must be confirmed with the treating doctor — post-operative targets are
+// routinely looser than general-population figures.
+function DEFAULT_METRICS(){ return [
+  { id:'glucose', label:'Blood Sugar', icon:'🩸', primary:'mgdl', tags:['FF','PP'],
+    fields:[{key:'mgdl',label:'Glucose',unit:'mg/dL',min:20,max:600,step:1,dp:0}],
+    slots:[{id:'g1',label:'Fasting (morning)',defaultTag:'FF'},
+           {id:'g2',label:'After breakfast',defaultTag:'PP'},
+           {id:'g3',label:'After dinner',defaultTag:'PP'}],
+    targets:{mgdl:{warnLow:80,warnHigh:140,alertLow:70,alertHigh:250}},
+    targetsByTag:{
+      FF:{mgdl:{warnLow:80,warnHigh:130,alertLow:70,alertHigh:250}},
+      PP:{mgdl:{warnLow:80,warnHigh:180,alertLow:70,alertHigh:300}}}},
+  { id:'bp', label:'Blood Pressure', icon:'🫀', primary:'sys',
+    fields:[{key:'sys',label:'Systolic',unit:'mmHg',min:50,max:260,step:1,dp:0},
+            {key:'dia',label:'Diastolic',unit:'mmHg',min:30,max:180,step:1,dp:0}],
+    slots:[{id:'b1',label:'Morning'},{id:'b2',label:'Evening'}],
+    targets:{sys:{warnLow:100,warnHigh:140,alertLow:90,alertHigh:180},
+             dia:{warnLow:60,warnHigh:90,alertLow:50,alertHigh:110}}},
+  { id:'spo2', label:'SpO₂', icon:'🫁', primary:'pct',
+    fields:[{key:'pct',label:'SpO₂',unit:'%',min:50,max:100,step:1,dp:0}],
+    slots:[{id:'o1',label:'Morning'},{id:'o2',label:'Evening'}],
+    targets:{pct:{warnLow:95,warnHigh:null,alertLow:92,alertHigh:null}}},
+  { id:'pulse', label:'Pulse Rate', icon:'💓', primary:'bpm',
+    fields:[{key:'bpm',label:'Pulse',unit:'bpm',min:20,max:220,step:1,dp:0}],
+    slots:[{id:'p1',label:'Morning'},{id:'p2',label:'Evening'}],
+    targets:{bpm:{warnLow:55,warnHigh:100,alertLow:45,alertHigh:120}}},
+  { id:'temp', label:'Temperature', icon:'🌡️', primary:'c',
+    fields:[{key:'c',label:'Temp',unit:'°C',min:30,max:45,step:.1,dp:1}],
+    slots:[{id:'t1',label:'Morning'},{id:'t2',label:'Evening'}],
+    targets:{c:{warnLow:35.5,warnHigh:37.5,alertLow:35,alertHigh:38.5}}},
+];}
+
+const findMetric = (patient,id) => (patient.metrics||[]).find(m=>m.id===id);
+
+function targetsFor(metric,fieldKey,tag){
+  const byTag = tag && metric.targetsByTag && metric.targetsByTag[tag];
+  return (byTag && byTag[fieldKey]) || (metric.targets && metric.targets[fieldKey]) || null;
+}
+
+// 'alert' = outside the act-now band; 'warn' = outside target; 'ok' otherwise.
+function evaluate(metric,fieldKey,value,tag){
+  const t=targetsFor(metric,fieldKey,tag);
+  if (t==null || value==null || Number.isNaN(value)) return 'ok';
+  if (t.alertLow!=null && value< t.alertLow ) return 'alert';
+  if (t.alertHigh!=null&& value> t.alertHigh) return 'alert';
+  if (t.warnLow!=null  && value< t.warnLow  ) return 'warn';
+  if (t.warnHigh!=null && value> t.warnHigh ) return 'warn';
+  return 'ok';
+}
+function evaluateReading(metric,reading){
+  let worst='ok';
+  for (const f of metric.fields){
+    const s=evaluate(metric,f.key,reading.values[f.key],reading.tag);
+    if (s==='alert') return 'alert';
+    if (s==='warn') worst='warn';
+  }
+  return worst;
+}
+
+/* ---------- unit conversion ---------- */
+// Values are stored in whatever unit the metric is configured for, so switching
+// units must rewrite the stored readings — otherwise old numbers silently change
+// meaning. Rewrites bump updatedAt, so the change propagates through sync.
+const CONVERSIONS={
+  'mg/dL->mmol/L':v=>Math.round(v/18.018*10)/10,
+  'mmol/L->mg/dL':v=>Math.round(v*18.018),
+  '°C->°F':v=>Math.round((v*9/5+32)*10)/10,
+  '°F->°C':v=>Math.round((v-32)*5/9*10)/10,
+};
+const UNIT_BOUNDS={
+  'mg/dL':{min:20,max:600,step:1,dp:0}, 'mmol/L':{min:1,max:33,step:.1,dp:1},
+  '°C':{min:30,max:45,step:.1,dp:1},    '°F':{min:86,max:113,step:.1,dp:1},
+};
+
+/* ---------- stats ---------- */
+
+const mean = ns => ns.length ? ns.reduce((a,b)=>a+b,0)/ns.length : null;
+const round= (n,dp) => n==null?null:Number(n.toFixed(dp));
+
+// One series per tag when a metric is tagged: averaging fasting and
+// post-prandial glucose together produces a number that means nothing.
+function seriesFor(metric){
+  if (metric.tags && metric.tags.length)
+    return metric.tags.map(t=>({key:metric.id+':'+t,label:metric.label+' ('+t+')',metric,tag:t}));
+  return [{key:metric.id,label:metric.label,metric,tag:null}];
+}
+
+function inWindow(readings,days,now=new Date()){
+  if (!days) return readings;
+  const from=daysAgoKey(days-1,now), to=todayKey(now);
+  return readings.filter(r=>{const k=dayKey(r.takenAt); return k>=from && k<=to;});
+}
+function inPrevWindow(readings,days,now=new Date()){
+  if (!days) return [];
+  const from=daysAgoKey(days*2-1,now), to=daysAgoKey(days,now);
+  return readings.filter(r=>{const k=dayKey(r.takenAt); return k>=from && k<=to;});
+}
+
+function computeStats(readings,patient,days,now=new Date()){
+  const mine=live(readings).filter(r=>r.patientId===patient.id);
+  const out=[];
+  for (const metric of patient.metrics||[]){
+    for (const s of seriesFor(metric)){
+      const all = mine.filter(r=>r.metricId===metric.id && (s.tag?r.tag===s.tag:true));
+      const cur = inWindow(all,days,now), prev=inPrevWindow(all,days,now);
+      if (!cur.length){ out.push({...s,n:0,fields:[],tir:null,trend:null}); continue; }
+      const fields = metric.fields.map(f=>{
+        const vals=cur.map(r=>r.values[f.key]).filter(v=>typeof v==='number'&&!Number.isNaN(v));
+        return {key:f.key,label:f.label,unit:f.unit,avg:round(mean(vals),f.dp??0),n:vals.length};
+      });
+      const okCount = cur.filter(r=>evaluateReading(metric,r)==='ok').length;
+      const p=metric.primary;
+      const pf=metric.fields.find(f=>f.key===p)||metric.fields[0];
+      const curM=mean(cur.map(r=>r.values[pf.key]).filter(Number.isFinite));
+      const prvM=mean(prev.map(r=>r.values[pf.key]).filter(Number.isFinite));
+      out.push({...s,n:cur.length,fields,
+        tir: Math.round(okCount/cur.length*100),
+        trend: (curM!=null&&prvM!=null) ? round(curM-prvM, pf.dp??0) : null,
+        trendUnit: pf.unit, prevN: prev.length});
+    }
+  }
+  return out;
+}
+
+/* ---------- today's checklist ---------- */
+function dayProgress(readings,patient,key){
+  const mine=live(readings).filter(r=>r.patientId===patient.id && dayKey(r.takenAt)===key);
+  return (patient.metrics||[]).map(metric=>{
+    const rs=mine.filter(r=>r.metricId===metric.id);
+    const slots=(metric.slots||[]).map(slot=>({
+      slot, readings: rs.filter(r=>r.slotId===slot.id).sort((a,b)=>a.takenAt<b.takenAt?-1:1)}));
+    return {metric, slots, extras: rs.filter(r=>!r.slotId||!(metric.slots||[]).some(s=>s.id===r.slotId)),
+      done: slots.filter(s=>s.readings.length).length, total: slots.length};
+  });
+}
+
+/* ---------- export ---------- */
+function toCSV(readings,patients){
+  const pn=Object.fromEntries(patients.map(p=>[p.id,p.name]));
+  const rows=[['patient','metric','tag','slot','value1','value2','unit','taken_at','recorded_by','note']];
+  for (const r of live(readings).sort((a,b)=>a.takenAt<b.takenAt?-1:1)){
+    const p=patients.find(x=>x.id===r.patientId); if(!p) continue;
+    const m=findMetric(p,r.metricId); if(!m) continue;
+    const slot=(m.slots||[]).find(s=>s.id===r.slotId);
+    const vs=m.fields.map(f=>r.values[f.key]??'');
+    rows.push([pn[r.patientId]||'',m.label,r.tag||'',slot?slot.label:'',
+      vs[0]??'',vs[1]??'',m.fields[0].unit,r.takenAt,r.recordedBy||'',r.note||'']);
+  }
+  return rows.map(r=>r.map(c=>{
+    const s=String(c);
+    return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',')).join('\n');
+}
+
+if (typeof module!=='undefined' && module.exports) module.exports={
+  uid,newer,mergeById,mergeStore,live,toLocalIso,dayKey,hhmm,todayKey,daysAgoKey,prettyDay,
+  DEFAULT_METRICS,findMetric,targetsFor,evaluate,evaluateReading,seriesFor,
+  inWindow,inPrevWindow,computeStats,dayProgress,toCSV,mean,round,CONVERSIONS,UNIT_BOUNDS};
+// ==== CORE END ====
+</script>
+
+<script>
+/* ============================ state ============================ */
+const DKEY='healthlog.v1.data', SKEY='healthlog.v1.settings';
+let data     = {patients:[],readings:[]};
+let settings = {deviceId:null,recorderName:'',room:null,lastSyncAt:null,remoteVersion:null,activePatientId:null,window:7};
+let tab='today', syncing=false, syncError=null;
+
+const $  = s=>document.querySelector(s);
+const esc= s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function loadLocal(){
+  try{ const d=localStorage.getItem(DKEY); if(d) data=JSON.parse(d); }catch(e){ console.error('data load',e); }
+  try{ const s=localStorage.getItem(SKEY); if(s) settings=Object.assign(settings,JSON.parse(s)); }catch(e){ console.error('settings load',e); }
+  if(!settings.deviceId){ settings.deviceId=uid(); saveSettings(); }
+  data.patients=data.patients||[]; data.readings=data.readings||[];
+}
+function saveData(){ localStorage.setItem(DKEY,JSON.stringify(data)); }
+function saveSettings(){ localStorage.setItem(SKEY,JSON.stringify(settings)); }
+
+function activePatient(){
+  const ps=live(data.patients);
+  let p=ps.find(x=>x.id===settings.activePatientId);
+  if(!p){ p=ps[0]; if(p){ settings.activePatientId=p.id; saveSettings(); } }
+  return p||null;
+}
+function stamp(rec){ rec.updatedAt=toLocalIso(new Date()); rec.deviceId=settings.deviceId; return rec; }
+
+function upsertReading(r){
+  const i=data.readings.findIndex(x=>x.id===r.id);
+  stamp(r); if(i<0) data.readings.push(r); else data.readings[i]=r;
+  saveData(); scheduleSync();
+}
+function upsertPatient(p){
+  const i=data.patients.findIndex(x=>x.id===p.id);
+  stamp(p); if(i<0) data.patients.push(p); else data.patients[i]=p;
+  saveData(); scheduleSync();
+}
+
+/* ============================ crypto ============================ */
+const enc=new TextEncoder(), dec=new TextDecoder();
+const b64e=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+let keyCache={id:null,pass:null,key:null};
+
+// Salt is derived from the room id rather than stored: a salt must be unique
+// per room, not secret, and this keeps the share link short.
+async function roomKey(roomId,passphrase){
+  if (keyCache.id===roomId && keyCache.pass===passphrase) return keyCache.key;
+  const salt=await crypto.subtle.digest('SHA-256',enc.encode('healthlog|'+roomId));
+  const base=await crypto.subtle.importKey('raw',enc.encode(passphrase),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},base,
+    {name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  keyCache={id:roomId,pass:passphrase,key};
+  return key;
+}
+async function encryptPayload(obj,roomId,pass){
+  const key=await roomKey(roomId,pass);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(obj)));
+  return {v:1,alg:'AES-GCM',kdf:'PBKDF2-SHA256-200000',iv:b64e(iv),ct:b64e(ct)};
+}
+async function decryptPayload(env,roomId,pass){
+  if(!env||env.v!==1) throw new Error('Unrecognised payload format');
+  const key=await roomKey(roomId,pass);
+  let plain;
+  try{ plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(env.iv)},key,b64d(env.ct)); }
+  catch(e){ throw new Error('WRONG_PASSPHRASE'); }
+  return JSON.parse(dec.decode(plain));
+}
+
+/* ============================ sync ============================ */
+// The backend only needs get-blob / put-blob. Swapping stores is a new adapter,
+// never a change to app logic.
+const WorkerAdapter={
+  url:(room)=>room.server.replace(/\/+$/,'')+'/room/'+encodeURIComponent(room.id),
+  async pull(room){
+    const r=await fetch(this.url(room),{cache:'no-store'});
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('Pull failed ('+r.status+')');
+    return {payload:await r.json(),version:r.headers.get('ETag')};
+  },
+  async push(room,payload,version){
+    const h={'Content-Type':'application/json'};
+    if(version!=null) h['If-Match']=version;
+    const r=await fetch(this.url(room),{method:'PUT',headers:h,body:JSON.stringify(payload)});
+    if(r.status===409) return {conflict:true};
+    if(!r.ok) throw new Error('Push failed ('+r.status+')');
+    return {version:r.headers.get('ETag')};
+  }
+};
+
+let syncTimer=null;
+function scheduleSync(){ if(!settings.room) return; clearTimeout(syncTimer); syncTimer=setTimeout(()=>syncNow(),1500); }
+
+async function syncNow(opts={}){
+  const room=settings.room;
+  if(!room||syncing){ return; }
+  if(!navigator.onLine){ syncError=null; renderSync(); return; }
+  syncing=true; syncError=null; renderSync();
+  try{
+    let attempt=0;
+    while(attempt++<2){
+      const got=await WorkerAdapter.pull(room);
+      let remote={patients:[],readings:[]}, version=null;
+      if(got){
+        version=got.version;
+        remote=await decryptPayload(got.payload,room.id,room.passphrase);
+      }
+      const merged=mergeStore(data,remote);
+      data=merged; saveData();
+      const res=await WorkerAdapter.push(room,await encryptPayload(merged,room.id,room.passphrase),version);
+      if(res.conflict) continue;              // someone else wrote in between — re-pull and merge again
+      settings.remoteVersion=res.version;
+      settings.lastSyncAt=toLocalIso(new Date());
+      saveSettings();
+      break;
+    }
+  }catch(e){
+    syncError = e.message==='WRONG_PASSPHRASE'
+      ? 'Wrong passphrase for this room'
+      : (e.message||'Sync failed');
+    console.error('sync',e);
+  }finally{
+    syncing=false; render();
+    if(opts.announce && !syncError) toast('Synced');
+    if(opts.announce && syncError) toast(syncError);
+  }
+}
+
+function syncState(){
+  if(!settings.room) return {cls:'',txt:'Local only'};
+  if(syncing) return {cls:'',txt:'Syncing…',spin:true};
+  if(syncError) return {cls:'err',txt:'Sync error'};
+  if(!navigator.onLine) return {cls:'off',txt:'Offline'};
+  if(!settings.lastSyncAt) return {cls:'off',txt:'Not synced'};
+  const mins=Math.floor((Date.now()-new Date(settings.lastSyncAt))/60000);
+  return {cls:'on',txt: mins<1?'Synced':(mins<60?mins+'m ago':Math.floor(mins/60)+'h ago')};
+}
+function renderSync(){
+  const s=syncState();
+  $('#syncDot').className='dot '+s.cls+(s.spin?' spin':'');
+  $('#syncTxt').textContent=s.txt;
+}
+
+/* ============================ sheet ============================ */
+let sheetOpen=false;
+function openSheet(html){
+  $('#sheetInner').innerHTML=html;
+  $('#sheet').classList.add('open'); $('#scrim').classList.add('open');
+  sheetOpen=true;
+}
+function closeSheet(){ $('#sheet').classList.remove('open'); $('#scrim').classList.remove('open'); sheetOpen=false; }
+$('#scrim').addEventListener('click',closeSheet);
+
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));background:#16181d;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(()=>t.style.opacity='0',2200);
+}
+
+/* ============================ views ============================ */
+function render(){
+  const p=activePatient();
+  $('#patientName').textContent = p?p.name:'Add person';
+  renderSync();
+  document.querySelectorAll('nav button').forEach(b=>
+    b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false'));
+  if(!p){ $('#view').innerHTML=viewOnboard(); return; }
+  $('#view').innerHTML =
+    tab==='today'   ? viewToday(p) :
+    tab==='history' ? viewHistory(p) :
+    tab==='stats'   ? viewStats(p) : viewSettings(p);
+  if(tab==='stats'||tab==='history') buildReport(p);
+}
+
+function viewOnboard(){
+  return `<div class="card" style="padding:22px 18px">
+    <h2 style="margin-bottom:8px">Welcome to HealthLog</h2>
+    <p class="muted tiny" style="margin:0 0 18px">Record blood sugar, blood pressure, SpO₂, pulse and temperature. Works offline; share with family later.</p>
+    <label class="f"><span>Who are you recording for?</span><input type="text" id="obPatient" placeholder="e.g. Amma" autocomplete="off"></label>
+    <label class="f"><span>Your name (shown on entries you record)</span><input type="text" id="obRecorder" placeholder="e.g. Manoj" autocomplete="off"></label>
+    <button class="btn" onclick="doOnboard()">Get started</button>
+  </div>
+  <p class="note">HealthLog records what you enter. It does not give medical advice — discuss all readings and targets with the treating doctor.</p>`;
+}
+function doOnboard(){
+  const name=$('#obPatient').value.trim()||'Person';
+  settings.recorderName=$('#obRecorder').value.trim(); saveSettings();
+  const p={id:uid(),name,metrics:DEFAULT_METRICS(),createdAt:toLocalIso(new Date()),deleted:false};
+  upsertPatient(p); settings.activePatientId=p.id; saveSettings(); render();
+}
+
+/* ---------- today ---------- */
+function viewToday(p){
+  const key=todayKey();
+  const groups=dayProgress(data.readings,p,key);
+  const alerts=[];
+  for(const g of groups) for(const s of g.slots) for(const r of s.readings)
+    if(evaluateReading(g.metric,r)==='alert') alerts.push({m:g.metric,r});
+  for(const g of groups) for(const r of g.extras)
+    if(evaluateReading(g.metric,r)==='alert') alerts.push({m:g.metric,r});
+
+  let h=`<div class="sectitle" style="margin-top:2px">${esc(prettyDay(key))} · ${new Date().toLocaleDateString(undefined,{day:'numeric',month:'long'})}</div>`;
+  if(alerts.length) h+=`<div class="alertbox">⚠ ${alerts.length} reading${alerts.length>1?'s':''} outside the safe range today — ${alerts.map(a=>esc(a.m.label)).filter((v,i,s)=>s.indexOf(v)===i).join(', ')}. Contact the doctor if this is unexpected.</div>`;
+
+  for(const g of groups){
+    const done=g.done+g.extras.length, tot=g.total;
+    h+=`<div class="card"><h3>${g.metric.icon} ${esc(g.metric.label)}
+      <span class="count ${g.done>=tot?'done':''}">${done}/${tot}</span></h3>`;
+    for(const s of g.slots){
+      const r=s.readings[s.readings.length-1];
+      h+=`<button class="slot" onclick="openEntry('${g.metric.id}',${r?`'${r.id}'`:'null'},'${s.slot.id}')">
+        <div class="lbl"><b>${esc(s.slot.label)}</b>
+          <small>${r?esc(hhmm(r.takenAt))+(r.recordedBy?' · '+esc(r.recordedBy):'')+(s.readings.length>1?' · +'+(s.readings.length-1)+' more':''):'Not recorded'}</small></div>
+        ${r?valueHTML(g.metric,r):`<span class="tick">＋</span>`}</button>`;
+    }
+    for(const r of g.extras){
+      h+=`<button class="slot" onclick="openEntry('${g.metric.id}','${r.id}',null)">
+        <div class="lbl"><b>Extra reading</b><small>${esc(hhmm(r.takenAt))}${r.recordedBy?' · '+esc(r.recordedBy):''}</small></div>
+        ${valueHTML(g.metric,r)}</button>`;
+    }
+    h+=`<button class="addextra" onclick="openEntry('${g.metric.id}',null,null)">＋ Add extra reading</button></div>`;
+  }
+  return h;
+}
+
+function valueHTML(metric,r){
+  const st=evaluateReading(metric,r);
+  const txt = metric.id==='bp'
+    ? `${r.values.sys??'–'}/${r.values.dia??'–'}`
+    : metric.fields.map(f=>fmt(r.values[f.key],f)).join(' ');
+  return `<span class="val ${st==='ok'?'':st}">${esc(txt)}<u>${esc(metric.fields[0].unit)}</u>${
+    r.tag?`<span class="pill ${st==='ok'?'':st}">${esc(r.tag)}</span>`:''}</span>`;
+}
+const fmt=(v,f)=> v==null||v===''?'–':Number(v).toFixed(f.dp??0);
+
+/* ---------- entry sheet ---------- */
+let entry=null;
+function openEntry(metricId,readingId,slotId){
+  const p=activePatient(), m=findMetric(p,metricId);
+  const existing=readingId?data.readings.find(r=>r.id===readingId):null;
+  const slot=(m.slots||[]).find(s=>s.id===(existing?existing.slotId:slotId));
+  const now=new Date();
+  entry = existing ? {...existing, values:{...existing.values}} : {
+    id:uid(), patientId:p.id, metricId, slotId:slotId||null,
+    tag: slot&&slot.defaultTag ? slot.defaultTag : (m.tags?m.tags[0]:null),
+    values:{}, takenAt:toLocalIso(now), note:'',
+    recordedBy:settings.recorderName||'', createdAt:toLocalIso(now), deleted:false};
+  renderEntry();
+}
+function renderEntry(){
+  const p=activePatient(), m=findMetric(p,entry.metricId);
+  const d=entry.takenAt.slice(0,10), t=entry.takenAt.slice(11,16);
+  let h=`<div class="sheethead"><h2>${m.icon} ${esc(m.label)}</h2>
+    <button class="x" onclick="closeSheet()">✕</button></div>`;
+
+  if(m.slots&&m.slots.length){
+    h+=`<label class="f"><span>When in the day</span><div class="chips">`+
+      m.slots.map(s=>`<button class="chip" aria-pressed="${entry.slotId===s.id}" onclick="pickSlot('${s.id}')">${esc(s.label)}</button>`).join('')+
+      `<button class="chip" aria-pressed="${!entry.slotId}" onclick="pickSlot(null)">Extra</button></div></label>`;
+  }
+  if(m.tags&&m.tags.length){
+    h+=`<label class="f"><span>Before or after food</span><div class="chips">`+
+      m.tags.map(t2=>`<button class="chip" aria-pressed="${entry.tag===t2}" onclick="pickTag('${t2}')">${t2==='FF'?'FF · fasting':'PP · after food'}</button>`).join('')+
+      `</div></label>`;
+  }
+  h+=`<div class="row">`+m.fields.map(f=>`<label class="f"><span>${esc(f.label)} (${esc(f.unit)})</span>
+      <input type="number" inputmode="decimal" id="v_${f.key}" value="${entry.values[f.key]??''}"
+        min="${f.min}" max="${f.max}" step="${f.step}" placeholder="–"></label>`).join('')+`</div>`;
+  h+=`<div class="row"><label class="f"><span>Date</span><input type="date" id="e_date" value="${d}" max="${todayKey()}"></label>
+      <label class="f"><span>Time</span><input type="time" id="e_time" value="${t}"></label></div>`;
+  h+=`<label class="f"><span>Note (optional)</span><textarea id="e_note" placeholder="e.g. felt dizzy, before physio">${esc(entry.note||'')}</textarea></label>`;
+  h+=`<button class="btn" onclick="saveEntry()">Save reading</button>`;
+  if(data.readings.some(r=>r.id===entry.id))
+    h+=`<button class="btn danger" style="margin-top:9px" onclick="deleteEntry()">Delete this reading</button>`;
+  h+=`<p class="note">Targets are guidance only, set in Settings. Confirm them with the doctor.</p>`;
+  openSheet(h);
+  setTimeout(()=>{const el=document.getElementById('v_'+m.fields[0].key); if(el&&!el.value) el.focus();},260);
+}
+function captureEntry(){
+  const p=activePatient(), m=findMetric(p,entry.metricId);
+  for(const f of m.fields){
+    const el=document.getElementById('v_'+f.key);
+    if(el) entry.values[f.key]= el.value===''?null:Number(el.value);
+  }
+  const d=$('#e_date').value, t=$('#e_time').value;
+  if(d&&t){ const [y,mo,da]=d.split('-').map(Number),[hh,mi]=t.split(':').map(Number);
+    entry.takenAt=toLocalIso(new Date(y,mo-1,da,hh,mi,0)); }
+  entry.note=$('#e_note').value.trim();
+}
+function pickSlot(id){ captureEntry(); const m=findMetric(activePatient(),entry.metricId);
+  entry.slotId=id; const s=(m.slots||[]).find(x=>x.id===id);
+  if(s&&s.defaultTag) entry.tag=s.defaultTag; renderEntry(); }
+function pickTag(t){ captureEntry(); entry.tag=t; renderEntry(); }
+
+function saveEntry(){
+  captureEntry();
+  const p=activePatient(), m=findMetric(p,entry.metricId);
+  const filled=m.fields.filter(f=>entry.values[f.key]!=null&&!Number.isNaN(entry.values[f.key]));
+  if(!filled.length){ toast('Enter a value first'); return; }
+  for(const f of m.fields){
+    const v=entry.values[f.key];
+    if(v!=null && (v<f.min||v>f.max)){ toast(`${f.label} must be between ${f.min} and ${f.max}`); return; }
+  }
+  if(m.id==='bp' && (entry.values.sys==null||entry.values.dia==null)){ toast('Enter both systolic and diastolic'); return; }
+  // Keep the original recorder — attribution should say who took the reading,
+  // not whoever last corrected a typo in it.
+  if(!entry.recordedBy) entry.recordedBy=settings.recorderName||'';
+  upsertReading(entry);
+  const st=evaluateReading(m,entry);
+  closeSheet(); render();
+  toast(st==='alert' ? '⚠ Saved — reading is outside the safe range' : st==='warn' ? 'Saved — outside target range' : 'Saved');
+}
+function deleteEntry(){
+  if(!confirm('Delete this reading?')) return;
+  const r=data.readings.find(x=>x.id===entry.id);
+  if(r){ r.deleted=true; upsertReading(r); }      // tombstone, so the delete syncs
+  closeSheet(); render(); toast('Deleted');
+}
+
+/* ---------- history ---------- */
+function viewHistory(p){
+  const rs=live(data.readings).filter(r=>r.patientId===p.id).sort((a,b)=>a.takenAt<b.takenAt?1:-1);
+  if(!rs.length) return `<div class="empty">No readings yet.<br>Add one from the Today tab.</div>`;
+  const days=[]; const byDay={};
+  for(const r of rs){ const k=dayKey(r.takenAt); if(!byDay[k]){byDay[k]=[];days.push(k);} byDay[k].push(r); }
+  let h='';
+  for(const k of days){
+    h+=`<div class="sectitle">${esc(prettyDay(k))}</div><div class="card">`;
+    for(const r of byDay[k]){
+      const m=findMetric(p,r.metricId); if(!m) continue;
+      const slot=(m.slots||[]).find(s=>s.id===r.slotId);
+      h+=`<button class="listitem" onclick="openEntry('${m.id}','${r.id}',null)">
+        <div class="lbl" style="flex:1;min-width:0"><b style="font-weight:550;font-size:14.5px">${m.icon} ${esc(m.label)}</b>
+        <small class="muted tiny" style="display:block">${esc(hhmm(r.takenAt))}${slot?' · '+esc(slot.label):''}${r.recordedBy?' · '+esc(r.recordedBy):''}${r.note?' · '+esc(r.note):''}</small></div>
+        ${valueHTML(m,r)}</button>`;
+    }
+    h+='</div>';
+  }
+  return h;
+}
+
+/* ---------- stats ---------- */
+function viewStats(p){
+  const days=settings.window||7;
+  const st=computeStats(data.readings,p,days);
+  let h=`<div class="sectitle" style="margin-top:2px">Averages</div>
+   <div class="chips" style="margin-bottom:13px">`+
+   [[7,'7 days'],[14,'14 days'],[30,'30 days'],[0,'All time']].map(([d,l])=>
+     `<button class="chip" aria-pressed="${days===d}" onclick="setWindow(${d})">${l}</button>`).join('')+`</div>`;
+
+  if(!st.some(s=>s.n)) return h+`<div class="empty">No readings in this period.</div>`;
+
+  h+='<div class="stats">';
+  for(const s of st){
+    if(!s.n){ h+=`<div class="stat"><div class="k">${s.metric.icon} ${esc(s.label)}</div>
+      <div class="v muted" style="font-size:20px">–</div><div class="sub">No readings</div></div>`; continue; }
+    const main = s.metric.id==='bp'
+      ? `${s.fields[0].avg??'–'}<small>/</small>${s.fields[1].avg??'–'}`
+      : `${s.fields[0].avg??'–'}`;
+    let sub=`n=${s.n}`;
+    if(s.trend!=null&&s.trend!==0) sub+=` · <span class="trend ${s.trend>0?'up':'down'}">${s.trend>0?'▲':'▼'} ${Math.abs(s.trend)}</span> vs prev`;
+    h+=`<div class="stat"><div class="k">${s.metric.icon} ${esc(s.label)}</div>
+      <div class="v">${main}<small> ${esc(s.fields[0].unit)}</small></div>
+      <div class="sub">${sub}</div>
+      <div class="bar"><i style="width:${s.tir}%;background:${s.tir>=80?'var(--ok)':s.tir>=50?'var(--warn)':'var(--alert)'}"></i></div>
+      <div class="sub" style="margin-top:5px">${s.tir}% within target</div></div>`;
+  }
+  h+='</div>';
+  h+=`<div class="sectitle">Report</div><div class="row" style="margin-bottom:10px">
+    <button class="btn sec" onclick="window.print()">Print / PDF</button>
+    <button class="btn sec" onclick="exportCSV()">Export CSV</button></div>`;
+  h+=`<p class="note">Blood pressure is averaged as systolic and diastolic separately — a combined average has no clinical meaning. Fasting (FF) and post-food (PP) sugar are kept apart for the same reason. “Within target” counts readings inside the ranges set in Settings.</p>`;
+  return h;
+}
+function setWindow(d){ settings.window=d; saveSettings(); render(); }
+
+/* ---------- settings ---------- */
+function viewSettings(p){
+  const room=settings.room;
+  let h=`<div class="sectitle" style="margin-top:2px">People</div><div class="card">`;
+  for(const q of live(data.patients))
+    h+=`<button class="listitem" onclick="editPatient('${q.id}')"><div style="flex:1">
+      <b style="font-weight:550">${esc(q.name)}</b>
+      <small class="muted tiny" style="display:block">${(q.metrics||[]).length} metrics · ${live(data.readings).filter(r=>r.patientId===q.id).length} readings</small></div>
+      <span class="muted">›</span></button>`;
+  h+=`<button class="addextra" onclick="editPatient(null)">＋ Add person</button></div>`;
+
+  h+=`<div class="sectitle">This device</div><div class="card" style="padding:15px">
+    <label class="f" style="margin:0"><span>Your name (recorded on your entries)</span>
+      <input type="text" id="setRecorder" value="${esc(settings.recorderName)}" onchange="settings.recorderName=this.value.trim();saveSettings();toast('Saved')" placeholder="e.g. Manoj"></label></div>`;
+
+  h+=`<div class="sectitle">Sharing &amp; sync</div><div class="card" style="padding:15px">`;
+  if(!room){
+    h+=`<p class="tiny muted" style="margin:0 0 13px">Everything is stored on this phone only. Create a shared room to keep several phones in sync — readings merge, so two people can record at the same time without overwriting each other.</p>
+    <label class="f"><span>Sync server URL</span><input type="text" id="rmServer" placeholder="https://healthlog.<you>.workers.dev" autocomplete="off"></label>
+    <label class="f"><span>Passphrase (shared with family)</span><input type="text" id="rmPass" placeholder="choose a passphrase" autocomplete="off"></label>
+    <div class="row"><button class="btn" onclick="createRoom()">Create room</button>
+      <button class="btn sec" onclick="joinRoomPrompt()">Join existing</button></div>
+    <p class="note" style="padding:12px 0 0">Readings are encrypted on this phone before upload. The server only ever stores ciphertext, so it cannot read the log. See README for the 5-minute server setup.</p>`;
+  }else{
+    const s=syncState();
+    h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px"><span class="dot ${s.cls}"></span><b style="font-weight:600">${esc(s.txt)}</b></div>
+      <p class="tiny muted" style="margin:0 0 13px;word-break:break-all">Room <code>${esc(room.id.slice(0,8))}…</code> on ${esc(room.server)}</p>`;
+    if(syncError) h+=`<div class="alertbox">${esc(syncError)}</div>`;
+    h+=`<div class="row" style="margin-bottom:9px"><button class="btn" onclick="syncNow({announce:true})">Sync now</button>
+      <button class="btn sec" onclick="shareRoom()">Share invite</button></div>
+      <button class="btn danger" onclick="leaveRoom()">Leave room (keep local data)</button>`;
+  }
+  h+=`</div>`;
+
+  h+=`<div class="sectitle">Data</div><div class="card">
+    <button class="listitem" onclick="exportJSON()"><div style="flex:1"><b style="font-weight:550">Backup to file</b>
+      <small class="muted tiny" style="display:block">Download everything as JSON</small></div><span class="muted">›</span></button>
+    <button class="listitem" onclick="importJSON()"><div style="flex:1"><b style="font-weight:550">Restore from file</b>
+      <small class="muted tiny" style="display:block">Merges with what is already here — nothing is overwritten</small></div><span class="muted">›</span></button>
+    <button class="listitem" onclick="exportCSV()"><div style="flex:1"><b style="font-weight:550">Export CSV</b>
+      <small class="muted tiny" style="display:block">For Excel or the doctor</small></div><span class="muted">›</span></button>
+    <button class="listitem" onclick="window.print()"><div style="flex:1"><b style="font-weight:550">Print report</b>
+      <small class="muted tiny" style="display:block">Weekly table plus averages</small></div><span class="muted">›</span></button></div>`;
+
+  h+=`<p class="note">HealthLog is a record-keeping tool. It does not diagnose, and its default ranges are generic starting points — post-operative targets are often deliberately different. Confirm every target with the treating doctor, and contact them about any reading that concerns you.</p>`;
+  return h;
+}
+
+/* ---------- patient editor ---------- */
+function editPatient(id){
+  const p=id?data.patients.find(x=>x.id===id):null;
+  window._pd = p?{...p,metrics:JSON.parse(JSON.stringify(p.metrics)),_convert:[]}
+                :{id:uid(),name:'',metrics:DEFAULT_METRICS(),createdAt:toLocalIso(new Date()),deleted:false,_convert:[]};
+  showPatientSheet();
+}
+// Renders the in-memory draft rather than reloading from storage, so schedule
+// and target edits survive a trip into the metric editor and back.
+function showPatientSheet(){
+  const d=window._pd, exists=data.patients.some(x=>x.id===d.id);
+  let h=`<div class="sheethead"><h2>${exists?'Edit person':'New person'}</h2><button class="x" onclick="closeSheet()">✕</button></div>
+    <label class="f"><span>Name</span><input type="text" id="pdName" value="${esc(d.name)}" placeholder="e.g. Amma"></label>`;
+  h+=`<div class="sectitle" style="margin:16px 0 8px">Schedule &amp; targets</div>`;
+  for(const m of d.metrics){
+    h+=`<button class="listitem card" style="margin-bottom:8px;border-radius:12px;border-top:1px solid var(--line)" onclick="capturePatientName();editMetric('${m.id}')">
+      <div style="flex:1"><b style="font-weight:550">${m.icon} ${esc(m.label)}</b>
+      <small class="muted tiny" style="display:block">${(m.slots||[]).length}× daily · ${esc(m.fields[0].unit)}</small></div><span class="muted">›</span></button>`;
+  }
+  h+=`<button class="btn" style="margin-top:14px" onclick="savePatient()">Save</button>`;
+  if(exists&&live(data.patients).length>1)
+    h+=`<button class="btn danger" style="margin-top:9px" onclick="deletePatient('${d.id}')">Delete person</button>`;
+  openSheet(h);
+}
+function capturePatientName(){ const el=document.getElementById('pdName'); if(el) window._pd.name=el.value; }
+
+function savePatient(){
+  capturePatientName();
+  const d=window._pd;
+  d.name=(d.name||'').trim()||'Person';
+  // Unit changes are queued rather than applied live: abandoning the sheet must
+  // not leave readings converted while the metric still claims the old unit.
+  const pending=d._convert||[]; delete d._convert;
+  let n=0;
+  for(const c of pending){
+    const conv=CONVERSIONS[c.from+'->'+c.to]; if(!conv) continue;
+    for(const r of data.readings){
+      if(r.patientId!==d.id||r.metricId!==c.metricId||r.deleted) continue;
+      if(typeof r.values[c.fieldKey]==='number'){ r.values[c.fieldKey]=conv(r.values[c.fieldKey]); stamp(r); n++; }
+    }
+  }
+  if(n) saveData();
+  upsertPatient(d); settings.activePatientId=d.id; saveSettings();
+  closeSheet(); render(); toast(n?`Saved — ${n} reading(s) converted`:'Saved');
+}
+function deletePatient(id){
+  const p=data.patients.find(x=>x.id===id);
+  if(!confirm(`Delete ${p.name} and hide their readings?`)) return;
+  p.deleted=true; upsertPatient(p);
+  settings.activePatientId=null; saveSettings(); closeSheet(); render();
+}
+
+function editMetric(mid){
+  const d=window._pd, m=d.metrics.find(x=>x.id===mid);
+  const units = m.id==='glucose'?['mg/dL','mmol/L'] : m.id==='temp'?['°C','°F'] : null;
+  let h=`<div class="sheethead"><h2>${m.icon} ${esc(m.label)}</h2><button class="x" onclick="showPatientSheet()">‹</button></div>`;
+  if(units) h+=`<label class="f"><span>Unit</span><div class="chips">`+
+    units.map(u=>`<button class="chip" aria-pressed="${m.fields[0].unit===u}" onclick="setUnit('${mid}','${u}')">${u}</button>`).join('')+`</div></label>`;
+
+  h+=`<div class="sectitle" style="margin:14px 0 8px">Times per day</div>`;
+  m.slots.forEach((s,i)=>{
+    h+=`<div class="row" style="margin-bottom:8px;align-items:center">
+      <input type="text" value="${esc(s.label)}" onchange="renameSlot('${mid}',${i},this.value)" style="flex:1">
+      <button class="btn danger" style="flex:0 0 46px;padding:12px 0" onclick="removeSlot('${mid}',${i})">✕</button></div>`;
+  });
+  h+=`<button class="btn sec" onclick="addSlot('${mid}')">＋ Add a time</button>`;
+
+  h+=`<div class="sectitle" style="margin:20px 0 8px">Target ranges</div>
+    <p class="tiny muted" style="margin:-2px 0 12px">Amber outside the target band, red outside the act-now band. Confirm these with the doctor.</p>`;
+  for(const f of m.fields){
+    const groups = m.targetsByTag ? Object.keys(m.targetsByTag).map(t=>[t,m.targetsByTag[t][f.key]])
+                                  : [[null,m.targets[f.key]]];
+    for(const [tag,t] of groups){
+      if(!t) continue;
+      h+=`<div class="sectitle" style="margin:10px 0 6px">${esc(f.label)}${tag?' · '+tag:''} (${esc(f.unit)})</div>
+        <div class="row"><label class="f"><span>Target low</span><input type="number" step="${f.step}" value="${t.warnLow??''}" onchange="setTarget('${mid}','${f.key}',${tag?`'${tag}'`:'null'},'warnLow',this.value)"></label>
+        <label class="f"><span>Target high</span><input type="number" step="${f.step}" value="${t.warnHigh??''}" onchange="setTarget('${mid}','${f.key}',${tag?`'${tag}'`:'null'},'warnHigh',this.value)"></label></div>
+        <div class="row"><label class="f"><span>Alert below</span><input type="number" step="${f.step}" value="${t.alertLow??''}" onchange="setTarget('${mid}','${f.key}',${tag?`'${tag}'`:'null'},'alertLow',this.value)"></label>
+        <label class="f"><span>Alert above</span><input type="number" step="${f.step}" value="${t.alertHigh??''}" onchange="setTarget('${mid}','${f.key}',${tag?`'${tag}'`:'null'},'alertHigh',this.value)"></label></div>`;
+    }
+  }
+  h+=`<button class="btn" style="margin-top:6px" onclick="showPatientSheet()">Done</button>
+      <p class="note">Changes apply when you save.</p>`;
+  openSheet(h);
+}
+const md=(mid)=>window._pd.metrics.find(x=>x.id===mid);
+function renameSlot(mid,i,v){ md(mid).slots[i].label=v.trim()||('Reading '+(i+1)); }
+function removeSlot(mid,i){ const m=md(mid); if(m.slots.length<=1){toast('Keep at least one');return;} m.slots.splice(i,1); editMetric(mid); }
+function addSlot(mid){ const m=md(mid); m.slots.push({id:uid().slice(0,8),label:'Reading '+(m.slots.length+1),
+  defaultTag:m.tags?m.tags[m.tags.length-1]:undefined}); editMetric(mid); }
+function setTarget(mid,fk,tag,which,v){
+  const m=md(mid), tgt = tag ? m.targetsByTag[tag][fk] : m.targets[fk];
+  tgt[which]= v===''?null:Number(v);
+}
+// Switching units must rewrite stored readings too — leaving them unconverted
+// would silently change what every past number means. The reading rewrite is
+// queued and applied by savePatient().
+function setUnit(mid,unit){
+  const m=md(mid), f=m.fields[0], from=f.unit;
+  if(from===unit) return;
+  const conv=CONVERSIONS[from+'->'+unit];
+  if(!conv){ toast('Cannot convert'); return; }
+  const b=UNIT_BOUNDS[unit]; Object.assign(f,{unit,min:b.min,max:b.max,step:b.step,dp:b.dp});
+  const groups = m.targetsByTag ? Object.values(m.targetsByTag).map(g=>g[f.key]) : [m.targets[f.key]];
+  for(const t of groups) for(const k of ['warnLow','warnHigh','alertLow','alertHigh'])
+    if(t&&t[k]!=null) t[k]=conv(t[k]);
+  (window._pd._convert=window._pd._convert||[]).push({metricId:mid,fieldKey:f.key,from,to:unit});
+  editMetric(mid);
+  const n=live(data.readings).filter(r=>r.patientId===window._pd.id&&r.metricId===mid).length;
+  toast(n?`${unit} — ${n} reading${n>1?'s':''} convert when you save`:`Unit set to ${unit}`);
+}
+
+/* ---------- patient switcher ---------- */
+$('#patientBtn').addEventListener('click',()=>{
+  const ps=live(data.patients);
+  if(!ps.length) return;
+  let h=`<div class="sheethead"><h2>Switch person</h2><button class="x" onclick="closeSheet()">✕</button></div><div class="card">`;
+  for(const p of ps) h+=`<button class="listitem" onclick="pickPatient('${p.id}')">
+    <div style="flex:1"><b style="font-weight:550">${esc(p.name)}</b></div>
+    ${p.id===settings.activePatientId?'<span style="color:var(--accent)">✓</span>':''}</button>`;
+  h+=`<button class="addextra" onclick="closeSheet();editPatient(null)">＋ Add person</button></div>`;
+  openSheet(h);
+});
+function pickPatient(id){ settings.activePatientId=id; saveSettings(); closeSheet(); render(); }
+
+/* ---------- rooms ---------- */
+function validRoomInput(server,pass){
+  if(!/^https?:\/\/.+/.test(server)){ toast('Enter the full server URL, starting with https://'); return false; }
+  if(pass.length<6){ toast('Use a passphrase of at least 6 characters'); return false; }
+  return true;
+}
+async function createRoom(){
+  const server=$('#rmServer').value.trim().replace(/\/+$/,''), pass=$('#rmPass').value.trim();
+  if(!validRoomInput(server,pass)) return;
+  settings.room={id:uid(),server,passphrase:pass}; settings.remoteVersion=null; saveSettings();
+  await syncNow({announce:true});
+  render(); if(!syncError) shareRoom();
+}
+function joinRoomPrompt(){
+  const server=$('#rmServer').value.trim().replace(/\/+$/,''), pass=$('#rmPass').value.trim();
+  const id=prompt('Room ID from the invite link:');
+  if(!id) return;
+  if(!validRoomInput(server,pass)) return;
+  joinRoom(id.trim(),server,pass);
+}
+async function joinRoom(id,server,pass){
+  settings.room={id,server,passphrase:pass}; settings.remoteVersion=null; saveSettings();
+  await syncNow({announce:true});
+  if(syncError){ toast(syncError); }
+  render();
+}
+function shareRoom(){
+  const r=settings.room; if(!r) return;
+  const base=location.href.split('#')[0];
+  const link=`${base}#room=${encodeURIComponent(r.id)}&s=${encodeURIComponent(r.server)}`;
+  const msg=`Join our HealthLog:\n${link}\n\nPassphrase: ${r.passphrase}\n\n(Open the link, then enter the passphrase. Send the passphrase separately if you can.)`;
+  if(navigator.share) navigator.share({title:'HealthLog invite',text:msg}).catch(()=>{});
+  else if(navigator.clipboard) navigator.clipboard.writeText(msg).then(()=>toast('Invite copied')).catch(()=>prompt('Copy this invite:',msg));
+  else prompt('Copy this invite:',msg);
+}
+function leaveRoom(){
+  if(!confirm('Stop syncing? Readings already on this phone are kept.')) return;
+  settings.room=null; settings.lastSyncAt=null; settings.remoteVersion=null; keyCache={id:null,pass:null,key:null};
+  saveSettings(); render(); toast('Sync turned off');
+}
+// The passphrase is deliberately NOT in the link — a forwarded invite alone
+// gives no access to the readings.
+function consumeInviteLink(){
+  const m=location.hash.match(/room=([^&]+)/), s=location.hash.match(/[&?]s=([^&]+)/);
+  if(!m||!s) return;
+  const id=decodeURIComponent(m[1]), server=decodeURIComponent(s[1]);
+  history.replaceState(null,'',location.href.split('#')[0]);
+  setTimeout(()=>{
+    const pass=prompt(`Join shared log on ${server}?\n\nEnter the passphrase you were given:`);
+    if(pass&&pass.trim()) joinRoom(id,server,pass.trim());
+  },400);
+}
+
+/* ---------- import / export ---------- */
+function download(name,mime,text){
+  const b=new Blob([text],{type:mime}), u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+function exportJSON(){
+  download(`healthlog-${todayKey()}.json`,'application/json',
+    JSON.stringify({format:'healthlog.v1',exportedAt:toLocalIso(new Date()),...data},null,1));
+  toast('Backup downloaded');
+}
+function exportCSV(){
+  download(`healthlog-${todayKey()}.csv`,'text/csv',toCSV(data.readings,data.patients));
+  toast('CSV downloaded');
+}
+function importJSON(){
+  const i=document.createElement('input'); i.type='file'; i.accept='.json,application/json';
+  i.onchange=()=>{
+    const f=i.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const inc=JSON.parse(rd.result);
+        if(!inc||!Array.isArray(inc.readings)) throw new Error('Not a HealthLog backup');
+        const before=data.readings.length;
+        data=mergeStore(data,inc); saveData(); scheduleSync(); render();
+        toast(`Merged — ${data.readings.length-before} new reading(s)`);
+      }catch(e){ toast('Could not read that file'); console.error(e); }
+    };
+    rd.readAsText(f);
+  };
+  i.click();
+}
+
+/* ---------- printable report ---------- */
+function buildReport(p){
+  const days=settings.window||30;
+  const st=computeStats(data.readings,p,days);
+  const rs=live(data.readings).filter(r=>r.patientId===p.id);
+  const cur=inWindow(rs,days).sort((a,b)=>a.takenAt<b.takenAt?-1:1);
+  let h=`<h1>${esc(p.name)} — Health Log</h1>
+    <p class="rmeta">${days?`Last ${days} days`:'All readings'} · generated ${new Date().toLocaleString()} · ${cur.length} readings</p>
+    <h2>Averages</h2><table><tr><th>Measurement</th><th>Average</th><th>Readings</th><th>Within target</th></tr>`;
+  for(const s of st){
+    if(!s.n) continue;
+    const v = s.metric.id==='bp' ? `${s.fields[0].avg}/${s.fields[1].avg} ${s.fields[0].unit}`
+                                 : `${s.fields[0].avg} ${s.fields[0].unit}`;
+    h+=`<tr><td>${esc(s.label)}</td><td>${esc(v)}</td><td>${s.n}</td><td>${s.tir}%</td></tr>`;
+  }
+  h+='</table><h2>Readings</h2><table><tr><th>Date</th><th>Time</th><th>Measurement</th><th>When</th><th>Value</th><th>Note</th></tr>';
+  for(const r of cur){
+    const m=findMetric(p,r.metricId); if(!m) continue;
+    const slot=(m.slots||[]).find(s=>s.id===r.slotId);
+    const st2=evaluateReading(m,r);
+    const v = m.id==='bp' ? `${r.values.sys??'–'}/${r.values.dia??'–'}`
+                          : m.fields.map(f=>fmt(r.values[f.key],f)).join(' ');
+    h+=`<tr><td>${esc(dayKey(r.takenAt))}</td><td>${esc(hhmm(r.takenAt))}</td>
+      <td>${esc(m.label)}${r.tag?' ('+esc(r.tag)+')':''}</td><td>${esc(slot?slot.label:'Extra')}</td>
+      <td class="${st2==='alert'?'a':st2==='warn'?'w':''}">${esc(v)} ${esc(m.fields[0].unit)}</td>
+      <td>${esc(r.note||'')}</td></tr>`;
+  }
+  h+='</table><p class="rmeta" style="margin-top:12pt">Bold underlined values are outside the configured alert range; bold values are outside the target range. Ranges are user-configured and are not medical advice.</p>';
+  $('#report').innerHTML=h;
+}
+
+/* ============================ boot ============================ */
+document.querySelectorAll('nav button').forEach(b=>
+  b.addEventListener('click',()=>{ tab=b.dataset.tab; closeSheet(); render(); window.scrollTo(0,0); }));
+$('#syncBtn').addEventListener('click',()=>{
+  if(!settings.room){ tab='settings'; render(); toast('Set up sharing below'); }
+  else syncNow({announce:true});
+});
+window.addEventListener('online',()=>{ renderSync(); syncNow(); });
+window.addEventListener('offline',renderSync);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ render(); syncNow(); } });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&sheetOpen) closeSheet(); });
+
+loadLocal();
+render();
+consumeInviteLink();
+if(settings.room) syncNow();
+setInterval(renderSync,60000);
+if('serviceWorker' in navigator && location.protocol!=='file:')
+  navigator.serviceWorker.register('sw.js').catch(()=>{});   // optional offline shell
+</script>
+</body>
+</html>

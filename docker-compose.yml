@@ -1,0 +1,32 @@
+services:
+  healthlog:
+    build: .
+    image: healthlog:latest
+    restart: unless-stopped
+    # Bound to loopback: with the tls profile Caddy reaches this over the
+    # compose network, and without it nothing is exposed to the internet by
+    # accident. Change to "8080:8080" only if you front it with something else.
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  # Optional TLS front end: `docker compose --profile tls up -d`.
+  # HTTPS is not decoration here — without it iOS refuses to install the app to
+  # the home screen and the service worker never registers.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["tls"]
+    restart: unless-stopped
+    depends_on: [healthlog]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      HEALTHLOG_DOMAIN: ${HEALTHLOG_DOMAIN:?set HEALTHLOG_DOMAIN, e.g. healthlog.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

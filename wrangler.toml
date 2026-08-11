@@ -1,0 +1,11 @@
+# Cloudflare Worker config for the HealthLog sync server.
+# Run `wrangler kv namespace create HEALTHLOG` and paste the returned id below.
+# See README.md for the full walkthrough.
+
+name = "healthlog"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+[[kv_namespaces]]
+binding = "HEALTHLOG"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"

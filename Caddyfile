@@ -1,0 +1,7 @@
+# Automatic Let's Encrypt certificates. Point HEALTHLOG_DOMAIN's A/AAAA record
+# at this host and leave ports 80 and 443 reachable — Caddy needs both to issue
+# and renew.
+{$HEALTHLOG_DOMAIN} {
+	encode gzip
+	reverse_proxy healthlog:8080
+}
